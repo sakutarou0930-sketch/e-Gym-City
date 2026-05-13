@@ -727,7 +727,13 @@
       const completedCount = state.tasks.filter(t => t.done).length;
 
       if (treeImage) {
-        treeImage.src = completedCount >= 5 ? "assets/treeApple.png" : "assets/tree.png";
+        if (completedCount >= 15) {
+          treeImage.src = "assets/treeGoldApple.png";
+        } else if (completedCount >= 5) {
+          treeImage.src = "assets/treeApple.png";
+        } else {
+          treeImage.src = "assets/tree.png";
+        }
       }
 
       if (dumbbellImage) {
