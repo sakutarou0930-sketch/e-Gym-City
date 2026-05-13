@@ -247,7 +247,7 @@
 
     .task-item {
       display: grid;
-      grid-template-columns: auto 1fr auto auto;
+      grid-template-columns: auto 1fr auto;
       align-items: center;
       gap: 10px;
       background: linear-gradient(180deg, var(--panel-light), var(--panel));
@@ -294,13 +294,29 @@
     .badge.emergency { background: #ff9b6b; }
 
     .delete-btn {
-      background: #ff6b6b;
-      color: white;
-      border: 2px solid #071426;
-      border-radius: 10px;
-      font-weight: 900;
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      padding: 4px 8px;
+      border-radius: 4px;
       cursor: pointer;
-      padding: 5px 8px;
+      font-weight: bold;
+    }
+
+    .move-btn {
+      background: none;
+      border: none;
+      color: #92b6e6;
+      cursor: pointer;
+      font-size: 14px;
+      padding: 2px 4px;
+    }
+    .move-btn:hover {
+      color: #fff;
+    }
+    .move-btn:disabled {
+      color: #3e5a80;
+      cursor: not-allowed;
     }
 
     .empty {
@@ -603,9 +619,10 @@
     });
 
     function toggleTask(taskId, checked) {
-      const task = state.tasks.find(item => item.id === taskId);
-      if (!task) return;
+      const taskIndex = state.tasks.findIndex(item => item.id === taskId);
+      if (taskIndex === -1) return;
 
+      const task = state.tasks[taskIndex];
       const point = POINTS[task.type];
 
       if (checked && !task.done) {
@@ -626,11 +643,22 @@
         } else {
           setMascot("happy", `毎日タスク達成！ +${point}pt ピヨ！`);
         }
+
+        state.tasks.splice(taskIndex, 1);
+        state.tasks.push(task);
       } else if (!checked && task.done) {
         task.done = false;
         state.totalPoints = Math.max(0, state.totalPoints - point);
         state.todayPoints = Math.max(0, state.todayPoints - point);
         setMascot("tired", `チェックを戻したピヨ。 -${point}pt`);
+
+        state.tasks.splice(taskIndex, 1);
+        const firstDoneIndex = state.tasks.findIndex(t => t.done);
+        if (firstDoneIndex === -1) {
+          state.tasks.push(task);
+        } else {
+          state.tasks.splice(firstDoneIndex, 0, task);
+        }
       }
 
       saveState();
@@ -652,6 +680,29 @@
 
       state.tasks = state.tasks.filter(item => item.id !== taskId);
       setMascot("normal", "タスクを整理したピヨ！");
+      saveState();
+      render();
+    }
+
+    function moveTask(taskId, direction) {
+      const index = state.tasks.findIndex(t => t.id === taskId);
+      if (index === -1) return;
+
+      const task = state.tasks[index];
+      if (task.done) return;
+
+      const uncheckedTasks = state.tasks.filter(t => !t.done);
+      const uIndex = uncheckedTasks.indexOf(task);
+      const targetUIndex = uIndex + direction;
+
+      if (targetUIndex < 0 || targetUIndex >= uncheckedTasks.length) return;
+
+      const targetTask = uncheckedTasks[targetUIndex];
+      const targetIndex = state.tasks.indexOf(targetTask);
+
+      state.tasks.splice(index, 1);
+      state.tasks.splice(targetIndex, 0, task);
+
       saveState();
       render();
     }
@@ -702,10 +753,40 @@
         del.textContent = "削除";
         del.addEventListener("click", () => deleteTask(task.id));
 
+        const actions = document.createElement("div");
+        actions.style.display = "flex";
+        actions.style.alignItems = "center";
+        actions.style.gap = "8px";
+        
+        actions.appendChild(badge);
+
+        if (!task.done) {
+          const uncheckedTasks = state.tasks.filter(t => !t.done);
+          const uIndex = uncheckedTasks.indexOf(task);
+
+          const upBtn = document.createElement("button");
+          upBtn.className = "move-btn";
+          upBtn.textContent = "↑";
+          upBtn.title = "上に移動";
+          upBtn.disabled = (uIndex === 0);
+          upBtn.addEventListener("click", () => moveTask(task.id, -1));
+
+          const downBtn = document.createElement("button");
+          downBtn.className = "move-btn";
+          downBtn.textContent = "↓";
+          downBtn.title = "下に移動";
+          downBtn.disabled = (uIndex === uncheckedTasks.length - 1);
+          downBtn.addEventListener("click", () => moveTask(task.id, 1));
+
+          actions.appendChild(upBtn);
+          actions.appendChild(downBtn);
+        }
+
+        actions.appendChild(del);
+
         item.appendChild(checkbox);
         item.appendChild(name);
-        item.appendChild(badge);
-        item.appendChild(del);
+        item.appendChild(actions);
         taskList.appendChild(item);
       });
     }
