@@ -186,6 +186,7 @@
       padding: 12px 14px;
       font-weight: 800;
       line-height: 1.5;
+      white-space: pre-wrap;
     }
 
     .task-panel {
@@ -457,13 +458,13 @@
       .tree { height: 110px; left: 0px; bottom: 70px; }
       .tree-apple { height: 115px !important; left: -5px !important; bottom: 65px !important; }
       .streetlamp { width: 70px; right: 10px; bottom: 80px; }
-      .bench { width: 100px; right: 25px; bottom: 55px; }
+      .bench { width: 100px; right: 45px; bottom: 55px; }
       
       .dumbbell { width: 55px; left: calc(50% - 50px); bottom: 70px; }
       .protein { width: 28px; left: calc(50% + 15px); bottom: 70px; }
       
       .mascot-img { width: 80px; left: auto; right: 10px; bottom: 50px; }
-      .message-box { font-size: 13px; padding: 10px; bottom: 10px; left: 10px; right: 10px; }
+      .message-box { font-size: 13px; padding: 10px 80px 10px 10px; bottom: 10px; left: 10px; right: 10px; }
     }
   </style>
 </head>
@@ -703,9 +704,9 @@
 
         const completedCount = state.tasks.filter(t => t.done).length;
         if (completedCount === 5) {
-          msg += " あっ！木にリンゴが実ったピヨ！";
+          msg += "\nあっ！木にリンゴが実ったピヨ！";
         } else if (completedCount === 15) {
-          msg += " すごいピヨ！木に金のリンゴが実ったピヨ！！";
+          msg += "\nすごいピヨ！木に金のリンゴが実ったピヨ！！";
         }
 
         setMascot(task.type === "emergency" ? "surprised" : "happy", msg);
