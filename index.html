@@ -436,6 +436,26 @@
       .city-scene { min-height: 520px; }
       .mascot-img { left: calc(50% + 100px); }
     }
+    /* スマホ対応（レスポンシブデザイン） */
+    @media (max-width: 850px) {
+      body { padding: 12px; }
+      .game { grid-template-columns: 1fr; gap: 16px; }
+      .header { flex-direction: column; text-align: center; gap: 12px; padding: 14px; }
+      .title { font-size: 26px; }
+      .score-board { justify-content: center; }
+      
+      .city-scene { min-height: 380px; padding: 12px; }
+      .sky-title { font-size: 14px; left: 10px; top: 10px; padding: 6px 10px; }
+      .background-img { top: 45px; }
+      
+      .gym-img { width: 220px; bottom: 85px; }
+      .tree { height: 140px; left: 5px; bottom: 65px; }
+      .tree-apple { height: 155px !important; left: -10px !important; bottom: 60px !important; }
+      .bench { width: 130px; right: 10px; bottom: 55px; }
+      .dumbbell { width: 70px; left: 150px; bottom: 65px; }
+      .protein { width: 35px; left: 225px; bottom: 65px; }
+      .mascot-img { width: 90px; right: 5px; bottom: 60px; }
+    }
   </style>
 </head>
 <body>
