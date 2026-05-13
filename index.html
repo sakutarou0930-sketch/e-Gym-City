@@ -453,7 +453,7 @@
     <section class="city-panel">
       <div class="city-scene">
         <div class="sky-title">タスクで街を育てよう！</div>
-        <img class="background-img" src="assets/town_background.png" alt="街の背景" onerror="this.style.display='none'" />
+        <img id="bgImage" class="background-img" src="assets/town_background.png" alt="街の背景" onerror="this.style.display='none'" />
         <img id="gymImage" class="gym-img" src="assets/gym_lv1.png" alt="ジム" />
         <img id="mascotImage" class="mascot-img" src="assets/chick_normal.png" alt="筋肉ヒヨコ" />
 
@@ -544,6 +544,7 @@
     const todayPoints = document.getElementById("todayPoints");
     const gymLevel = document.getElementById("gymLevel");
     const gymImage = document.getElementById("gymImage");
+    const bgImage = document.getElementById("bgImage");
     const mascotImage = document.getElementById("mascotImage");
     const proteinImage = document.getElementById("proteinImage");
     const treeImage = document.getElementById("treeImage");
@@ -567,6 +568,8 @@
       }
       if (state.soundEnabled === undefined) state.soundEnabled = true;
       updateMuteBtn();
+      updateBackground();
+      setInterval(updateBackground, 60000);
       render();
     }
 
@@ -579,6 +582,18 @@
     function updateMuteBtn() {
       muteBtn.textContent = state.soundEnabled ? "🔊" : "🔇";
       muteBtn.style.opacity = state.soundEnabled ? "1" : "0.6";
+    }
+
+    function updateBackground() {
+      if (!bgImage) return;
+      const hour = new Date().getHours();
+      if (hour >= 5 && hour < 17) {
+        bgImage.src = "assets/town_background.png";
+      } else if (hour >= 17 && hour < 20) {
+        bgImage.src = "assets/town_background17.png";
+      } else {
+        bgImage.src = "assets/town_background20.png";
+      }
     }
 
     taskForm.addEventListener("submit", (event) => {
