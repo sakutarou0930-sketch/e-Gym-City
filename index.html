@@ -376,6 +376,21 @@
       100% { transform: translateX(-50%) scale(1); }
     }
 
+    @keyframes coinFall {
+      0% { top: -50px; transform: rotate(0deg); opacity: 1; }
+      100% { top: 110vh; transform: rotate(360deg); opacity: 1; }
+    }
+
+    .coin-effect {
+      position: fixed;
+      width: 48px;
+      height: 48px;
+      z-index: 100;
+      pointer-events: none;
+      image-rendering: pixelated;
+      animation: coinFall 1.2s cubic-bezier(0.4, 0, 1, 1) forwards;
+    }
+
     @media (max-width: 880px) {
       body { padding: 14px; }
       .game { grid-template-columns: 1fr; }
@@ -523,6 +538,7 @@
 
       taskInput.value = "";
       setMascot("normal", "新しいタスクを登録したピヨ！");
+      playSound("ヒヨコの鳴き声.mp3");
       saveState();
       render();
     });
@@ -561,6 +577,12 @@
         task.done = true;
         state.totalPoints += point;
         state.todayPoints += point;
+
+        if (point === 1) playSound("キラッ1.mp3");
+        else if (point === 2) playSound("キラッ2.mp3");
+        else if (point >= 3) playSound("決定ボタンを押す21.mp3");
+        
+        spawnCoins(point);
 
         if (task.type === "emergency") {
           setMascot("surprised", `臨時対応クリア！ +${point}pt ピヨッ！！`);
@@ -700,6 +722,25 @@
       const month = String(now.getMonth() + 1).padStart(2, "0");
       const day = String(now.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
+    }
+
+    function playSound(filename) {
+      const audio = new Audio(`assets/${filename}`);
+      audio.volume = 0.5;
+      audio.play().catch(e => console.log("音声再生がブラウザにブロックされました:", e));
+    }
+
+    function spawnCoins(count) {
+      for (let i = 0; i < count; i++) {
+        setTimeout(() => {
+          const coin = document.createElement("img");
+          coin.src = "assets/ptコイン.png";
+          coin.className = "coin-effect";
+          coin.style.left = `${20 + Math.random() * 60}%`;
+          document.body.appendChild(coin);
+          coin.addEventListener("animationend", () => coin.remove());
+        }, i * 200);
+      }
     }
 
     function saveState() {
