@@ -438,23 +438,32 @@
     }
     /* スマホ対応（レスポンシブデザイン） */
     @media (max-width: 850px) {
-      body { padding: 12px; }
+      body { padding: 10px; }
       .game { grid-template-columns: 1fr; gap: 16px; }
-      .header { flex-direction: column; text-align: center; gap: 12px; padding: 14px; }
-      .title { font-size: 26px; }
-      .score-board { justify-content: center; }
       
-      .city-scene { min-height: 380px; padding: 12px; }
-      .sky-title { font-size: 14px; left: 10px; top: 10px; padding: 6px 10px; }
-      .background-img { top: 45px; }
+      /* ヘッダーの調整 */
+      .header { position: relative; flex-direction: column; text-align: center; gap: 8px; padding: 14px 10px; }
+      .title { font-size: 24px; margin-top: 5px; }
+      .mute-btn { position: absolute; top: 15px; right: 15px; padding: 4px 8px; font-size: 14px; }
+      .score-board { justify-content: center; gap: 4px; flex-wrap: nowrap; }
+      .score-chip:not(.mute-btn) { font-size: 11px; padding: 5px 6px; letter-spacing: -0.5px; }
       
-      .gym-img { width: 220px; bottom: 85px; }
-      .tree { height: 140px; left: 5px; bottom: 65px; }
-      .tree-apple { height: 155px !important; left: -10px !important; bottom: 60px !important; }
-      .bench { width: 130px; right: 10px; bottom: 55px; }
-      .dumbbell { width: 70px; left: 150px; bottom: 65px; }
-      .protein { width: 35px; left: 225px; bottom: 65px; }
-      .mascot-img { width: 90px; right: 5px; bottom: 60px; }
+      /* 街の景色の調整 */
+      .city-scene { min-height: 360px; padding: 10px; }
+      .sky-title { font-size: 12px; left: 10px; top: 10px; padding: 4px 8px; }
+      .background-img { top: 40px; width: 92%; }
+      
+      .gym-img { width: 170px; bottom: 85px; }
+      .tree { height: 110px; left: 0px; bottom: 70px; }
+      .tree-apple { height: 115px !important; left: -5px !important; bottom: 65px !important; }
+      .streetlamp { width: 70px; right: 10px; bottom: 80px; }
+      .bench { width: 100px; right: 25px; bottom: 55px; }
+      
+      .dumbbell { width: 55px; left: calc(50% - 50px); bottom: 70px; }
+      .protein { width: 28px; left: calc(50% + 15px); bottom: 70px; }
+      
+      .mascot-img { width: 80px; left: auto; right: 10px; bottom: 50px; }
+      .message-box { font-size: 13px; padding: 10px; bottom: 10px; left: 10px; right: 10px; }
     }
   </style>
 </head>
