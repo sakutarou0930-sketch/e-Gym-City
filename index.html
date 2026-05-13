@@ -171,6 +171,7 @@
     .tree { width: 180px; left: 20px; bottom: 85px; }
     .bench { width: 170px; right: 70px; bottom: 75px; }
     .dumbbell { width: 90px; left: 230px; bottom: 85px; }
+    .protein { width: 45px; left: 325px; bottom: 85px; z-index: 5; }
     .streetlamp { width: 120px; right: 20px; bottom: 100px; }
 
     .message-box {
@@ -459,6 +460,7 @@
         <img class="object tree" src="assets/tree.png" alt="木" onerror="this.style.display='none'" />
         <img class="object bench" src="assets/bench.png" alt="ベンチ" onerror="this.style.display='none'" />
         <img class="object dumbbell" src="assets/dumbbell.png" alt="ダンベル" onerror="this.style.display='none'" />
+        <img id="proteinImage" class="object protein" src="assets/protein.png" alt="プロテイン" style="display: none;" onerror="this.style.display='none'" />
         <img class="object streetlamp" src="assets/streetlamp.png" alt="街灯" onerror="this.style.display='none'" />
 
         <div id="messageBox" class="message-box">今日もピヨっと1タスクから始めよう！</div>
@@ -527,6 +529,7 @@
       totalPoints: 0,
       todayPoints: 0,
       lastOpenedDate: getTodayString(),
+      loginDays: 1,
       mascotState: "normal",
       soundEnabled: true
     };
@@ -542,6 +545,7 @@
     const gymLevel = document.getElementById("gymLevel");
     const gymImage = document.getElementById("gymImage");
     const mascotImage = document.getElementById("mascotImage");
+    const proteinImage = document.getElementById("proteinImage");
     const messageBox = document.getElementById("messageBox");
     const dayCheckModal = document.getElementById("dayCheckModal");
     const undoneList = document.getElementById("undoneList");
@@ -554,6 +558,7 @@
     init();
 
     function init() {
+      if (!state.loginDays) state.loginDays = 1;
       const today = getTodayString();
       if (state.lastOpenedDate !== today) {
         openDayCheckModal();
@@ -612,6 +617,7 @@
     confirmDayResetBtn.addEventListener("click", () => {
       state.tasks = state.tasks.filter(task => !task.done);
       state.todayPoints = 0;
+      state.loginDays = (state.loginDays || 1) + 1;
       state.lastOpenedDate = getTodayString();
       setMascot("normal", "新しい1日が始まったピヨ！今日も街を育てよう！");
       saveState();
@@ -711,6 +717,10 @@
     function render(animateGym = false) {
       totalPoints.textContent = state.totalPoints;
       todayPoints.textContent = state.todayPoints;
+
+      if (proteinImage) {
+        proteinImage.style.display = state.loginDays >= 10 ? "block" : "none";
+      }
 
       const level = getGymLevel(state.totalPoints);
       gymLevel.textContent = level;
