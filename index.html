@@ -566,6 +566,8 @@
       const today = getTodayString();
       if (state.lastOpenedDate !== today) {
         openDayCheckModal();
+      } else {
+        setMascot("normal", messageBox ? messageBox.textContent : "");
       }
       if (state.soundEnabled === undefined) state.soundEnabled = true;
       updateMuteBtn();
@@ -766,7 +768,17 @@
       }
 
       if (dumbbellImage) {
-        dumbbellImage.style.display = completedCount >= 10 ? "block" : "none";
+        const isDumbbellVisible = completedCount >= 10;
+        dumbbellImage.style.display = isDumbbellVisible ? "block" : "none";
+        if (isDumbbellVisible) {
+          if (state.loginDays >= 40) {
+            dumbbellImage.src = "assets/Gold dumbbell.png";
+          } else if (state.loginDays >= 20) {
+            dumbbellImage.src = "assets/Silver dumbbell.png";
+          } else {
+            dumbbellImage.src = "assets/dumbbell.png";
+          }
+        }
       }
 
       const level = getGymLevel(state.totalPoints);
@@ -779,7 +791,15 @@
         gymImage.classList.add("level-up");
       }
 
-      mascotImage.src = MASCOTS[state.mascotState] || MASCOTS.normal;
+      let mascotSrc = MASCOTS[state.mascotState] || MASCOTS.normal;
+      if (state.mascotState === "normal") {
+        if (state.loginDays >= 50) {
+          mascotSrc = "assets/chick_normal GoldCrown.png";
+        } else if (state.loginDays >= 30) {
+          mascotSrc = "assets/chick_normal SilverCrown.png";
+        }
+      }
+      mascotImage.src = mascotSrc;
 
       taskList.innerHTML = "";
       if (state.tasks.length === 0) {
@@ -877,11 +897,22 @@
       return 1;
     }
 
-    function setMascot(status, message) {
-      state.mascotState = status;
+    function setMascot(emotion, message) {
+      state.mascotState = emotion;
+      if (mascotImage) {
+        let src = `assets/chick_${emotion}.png`;
+        if (emotion === "normal") {
+          if (state.loginDays >= 50) {
+            src = "assets/chick_normal GoldCrown.png";
+          } else if (state.loginDays >= 30) {
+            src = "assets/chick_normal SilverCrown.png";
+          }
+        }
+        mascotImage.src = src;
+      }
       if (message) messageBox.textContent = message;
 
-      if (["happy", "surprised", "tired"].includes(status)) {
+      if (["happy", "surprised", "tired"].includes(emotion)) {
         setTimeout(() => {
           state.mascotState = "normal";
           saveState();
