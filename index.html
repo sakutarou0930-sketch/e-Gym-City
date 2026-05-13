@@ -168,7 +168,8 @@
       filter: drop-shadow(0 7px 0 rgba(0,0,0,0.18));
     }
 
-    .tree { height: 184px; width: auto; left: 20px; bottom: 85px; }
+    .tree { height: 184px; width: auto; left: 20px; bottom: 85px; transition: all 0.3s ease; }
+    .tree-apple { height: 215px !important; left: -5px !important; bottom: 75px !important; }
     .bench { width: 170px; right: 70px; bottom: 75px; }
     .dumbbell { width: 90px; left: 230px; bottom: 85px; }
     .protein { width: 45px; left: 325px; bottom: 85px; z-index: 5; }
@@ -744,10 +745,13 @@
       if (treeImage) {
         if (completedCount >= 15) {
           treeImage.src = "assets/treeGoldApple.png";
+          treeImage.className = "object tree";
         } else if (completedCount >= 5) {
           treeImage.src = "assets/treeApple.png";
+          treeImage.className = "object tree tree-apple";
         } else {
           treeImage.src = "assets/tree.png";
+          treeImage.className = "object tree";
         }
       }
 
