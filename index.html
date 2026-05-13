@@ -457,9 +457,9 @@
         <img id="gymImage" class="gym-img" src="assets/gym_lv1.png" alt="ジム" />
         <img id="mascotImage" class="mascot-img" src="assets/chick_normal.png" alt="筋肉ヒヨコ" />
 
-        <img class="object tree" src="assets/tree.png" alt="木" onerror="this.style.display='none'" />
+        <img id="treeImage" class="object tree" src="assets/tree.png" alt="木" onerror="this.style.display='none'" />
         <img class="object bench" src="assets/bench.png" alt="ベンチ" onerror="this.style.display='none'" />
-        <img class="object dumbbell" src="assets/dumbbell.png" alt="ダンベル" onerror="this.style.display='none'" />
+        <img id="dumbbellImage" class="object dumbbell" src="assets/dumbbell.png" alt="ダンベル" style="display: none;" onerror="this.style.display='none'" />
         <img id="proteinImage" class="object protein" src="assets/protein.png" alt="プロテイン" style="display: none;" onerror="this.style.display='none'" />
         <img class="object streetlamp" src="assets/streetlamp.png" alt="街灯" onerror="this.style.display='none'" />
 
@@ -546,6 +546,8 @@
     const gymImage = document.getElementById("gymImage");
     const mascotImage = document.getElementById("mascotImage");
     const proteinImage = document.getElementById("proteinImage");
+    const treeImage = document.getElementById("treeImage");
+    const dumbbellImage = document.getElementById("dumbbellImage");
     const messageBox = document.getElementById("messageBox");
     const dayCheckModal = document.getElementById("dayCheckModal");
     const undoneList = document.getElementById("undoneList");
@@ -720,6 +722,16 @@
 
       if (proteinImage) {
         proteinImage.style.display = state.loginDays >= 10 ? "block" : "none";
+      }
+
+      const completedCount = state.tasks.filter(t => t.done).length;
+
+      if (treeImage) {
+        treeImage.src = completedCount >= 5 ? "assets/treeApple.png" : "assets/tree.png";
+      }
+
+      if (dumbbellImage) {
+        dumbbellImage.style.display = completedCount >= 10 ? "block" : "none";
       }
 
       const level = getGymLevel(state.totalPoints);
