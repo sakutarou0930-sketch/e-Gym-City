@@ -661,13 +661,23 @@
         
         spawnCoins(point);
 
+        let msg = "";
         if (task.type === "emergency") {
-          setMascot("surprised", `臨時対応クリア！ +${point}pt ピヨッ！！`);
+          msg = `臨時対応クリア！ +${point}pt ピヨッ！！`;
         } else if (task.type === "extra") {
-          setMascot("happy", `追加タスク達成！ +${point}pt すごいピヨ！`);
+          msg = `追加タスク達成！ +${point}pt すごいピヨ！`;
         } else {
-          setMascot("happy", `毎日タスク達成！ +${point}pt ピヨ！`);
+          msg = `毎日タスク達成！ +${point}pt ピヨ！`;
         }
+
+        const completedCount = state.tasks.filter(t => t.done).length;
+        if (completedCount === 5) {
+          msg += " あっ！木にリンゴが実ったピヨ！";
+        } else if (completedCount === 15) {
+          msg += " すごいピヨ！木に金のリンゴが実ったピヨ！！";
+        }
+
+        setMascot(task.type === "emergency" ? "surprised" : "happy", msg);
 
         state.tasks.splice(taskIndex, 1);
         state.tasks.push(task);
