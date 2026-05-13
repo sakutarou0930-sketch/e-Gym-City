@@ -580,7 +580,7 @@
       const type = taskType.value;
       if (!name) return;
 
-      state.tasks.push({
+      state.tasks.unshift({
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         name,
         type,
