@@ -57,6 +57,24 @@
       text-shadow: 3px 3px 0 #06101f;
     }
 
+    .logo-img {
+      max-width: 220px;
+      height: auto;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 4px 0 #06101f);
+    }
+
+    .mute-btn {
+      cursor: pointer;
+      font-size: 18px;
+      padding: 6px 12px;
+      transition: transform 0.1s;
+    }
+    
+    .mute-btn:active {
+      transform: scale(0.9);
+    }
+
     .score-board {
       display: flex;
       gap: 10px;
@@ -404,8 +422,10 @@
 <body>
   <main class="game">
     <header class="header">
-      <h1 class="title">e-Gym City</h1>
+      <img class="logo-img" src="assets/e_gym_city_ロゴ.png" alt="e-Gym City" onerror="this.style.display='none'; this.nextElementSibling.style.display='block'" />
+      <h1 class="title" style="display: none;">e-Gym City</h1>
       <div class="score-board">
+        <button id="muteBtn" class="score-chip mute-btn" type="button" title="サウンドON/OFF">🔊</button>
         <div class="score-chip">🏅 合計 <span id="totalPoints">0</span> pt</div>
         <div class="score-chip">🏢 Gym Lv.<span id="gymLevel">1</span></div>
         <div class="score-chip">🐤 今日 <span id="todayPoints">0</span> pt</div>
@@ -490,7 +510,8 @@
       totalPoints: 0,
       todayPoints: 0,
       lastOpenedDate: getTodayString(),
-      mascotState: "normal"
+      mascotState: "normal",
+      soundEnabled: true
     };
 
     let state = loadState();
@@ -511,6 +532,7 @@
     const hardResetBtn = document.getElementById("hardResetBtn");
     const cancelDayCheckBtn = document.getElementById("cancelDayCheckBtn");
     const confirmDayResetBtn = document.getElementById("confirmDayResetBtn");
+    const muteBtn = document.getElementById("muteBtn");
 
     init();
 
@@ -519,7 +541,20 @@
       if (state.lastOpenedDate !== today) {
         openDayCheckModal();
       }
+      if (state.soundEnabled === undefined) state.soundEnabled = true;
+      updateMuteBtn();
       render();
+    }
+
+    muteBtn.addEventListener("click", () => {
+      state.soundEnabled = !state.soundEnabled;
+      updateMuteBtn();
+      saveState();
+    });
+
+    function updateMuteBtn() {
+      muteBtn.textContent = state.soundEnabled ? "🔊" : "🔇";
+      muteBtn.style.opacity = state.soundEnabled ? "1" : "0.6";
     }
 
     taskForm.addEventListener("submit", (event) => {
@@ -725,6 +760,7 @@
     }
 
     function playSound(filename) {
+      if (!state.soundEnabled) return;
       const audio = new Audio(`assets/${filename}`);
       audio.volume = 0.5;
       audio.play().catch(e => console.log("音声再生がブラウザにブロックされました:", e));
