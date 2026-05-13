@@ -396,11 +396,11 @@
 
     @keyframes coinFall {
       0% { top: -50px; transform: rotate(0deg); opacity: 1; }
-      100% { top: 110vh; transform: rotate(360deg); opacity: 1; }
+      100% { top: 600px; transform: rotate(360deg); opacity: 1; }
     }
 
     .coin-effect {
-      position: fixed;
+      position: absolute;
       width: 48px;
       height: 48px;
       z-index: 100;
@@ -767,13 +767,18 @@
     }
 
     function spawnCoins(count) {
+      const cityScene = document.querySelector(".city-scene");
       for (let i = 0; i < count; i++) {
         setTimeout(() => {
           const coin = document.createElement("img");
           coin.src = "assets/ptコイン.png";
           coin.className = "coin-effect";
-          coin.style.left = `${20 + Math.random() * 60}%`;
-          document.body.appendChild(coin);
+          coin.style.left = `${10 + Math.random() * 80}%`;
+          if (cityScene) {
+            cityScene.appendChild(coin);
+          } else {
+            document.body.appendChild(coin);
+          }
           coin.addEventListener("animationend", () => coin.remove());
         }, i * 200);
       }
