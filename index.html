@@ -201,7 +201,7 @@
 
     .form {
       display: grid;
-      grid-template-columns: 1fr 130px;
+      grid-template-columns: 1fr 140px 120px;
       gap: 10px;
       margin-bottom: 14px;
     }
@@ -442,6 +442,10 @@
       body { padding: 10px; }
       .game { grid-template-columns: 1fr; gap: 16px; }
       
+      .form { grid-template-columns: 1fr 1fr; }
+      #taskInput { grid-column: 1 / -1; }
+      .add-btn { grid-column: 1 / -1; }
+      
       /* ヘッダーの調整 */
       .header { position: relative; flex-direction: column; text-align: center; gap: 8px; padding: 14px 10px; }
       .title { font-size: 24px; margin-top: 5px; }
@@ -504,6 +508,7 @@
 
       <form id="taskForm" class="form">
         <input id="taskInput" class="task-input" type="text" placeholder="タスクを入力" autocomplete="off" />
+        <input id="taskDeadline" class="task-input" type="date" title="期限を設定（任意）" />
         <select id="taskType" class="task-type">
           <option value="daily">毎日 1pt</option>
           <option value="extra">追加 2pt</option>
@@ -570,6 +575,7 @@
 
     const taskForm = document.getElementById("taskForm");
     const taskInput = document.getElementById("taskInput");
+    const taskDeadline = document.getElementById("taskDeadline");
     const taskType = document.getElementById("taskType");
     const taskList = document.getElementById("taskList");
     const totalPoints = document.getElementById("totalPoints");
@@ -656,11 +662,13 @@
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
         name,
         type,
+        deadline: taskDeadline.value || null,
         done: false,
         createdAt: new Date().toISOString()
       });
 
       taskInput.value = "";
+      taskDeadline.value = "";
       setMascot("normal", "新しいタスクを登録したピヨ！");
       playSound("ヒヨコの鳴き声.mp3");
       saveState();
@@ -894,7 +902,18 @@
 
         const name = document.createElement("div");
         name.className = "task-name";
-        name.textContent = task.name;
+        
+        let textHTML = escapeHtml(task.name);
+        if (task.deadline) {
+          const todayStr = getTodayString();
+          const displayDate = task.deadline.replace(/-/g, '/');
+          if (!task.done && task.deadline < todayStr) {
+            textHTML = `<span style="color: #ff6b6b; font-size: 0.85em; font-weight: bold; margin-right: 6px; text-decoration: underline;">[期限超過: ${displayDate}]</span>` + textHTML;
+          } else {
+            textHTML = `<span style="color: #ff9f43; font-size: 0.85em; font-weight: bold; margin-right: 6px;">[期限: ${displayDate}]</span>` + textHTML;
+          }
+        }
+        name.innerHTML = textHTML;
 
         const badge = document.createElement("div");
         badge.className = `badge ${task.type}`;
