@@ -591,10 +591,24 @@
     const muteBtn = document.getElementById("muteBtn");
     const loginDaysDisplay = document.getElementById("loginDaysDisplay");
     const todayDateDisplay = document.getElementById("todayDateDisplay");
+    let holidaysCache = {};
+
+    async function fetchHolidays() {
+      try {
+        const res = await fetch("https://holidays-jp.github.io/api/v1/date.json");
+        if (res.ok) {
+          holidaysCache = await res.json();
+          render();
+        }
+      } catch (error) {
+        console.error("祝日データの取得に失敗しました", error);
+      }
+    }
 
     init();
 
     function init() {
+      fetchHolidays();
       if (!state.loginDays) state.loginDays = 1;
       const today = getTodayString();
       if (state.lastOpenedDate !== today) {
@@ -783,7 +797,30 @@
       if (loginDaysDisplay) loginDaysDisplay.textContent = state.loginDays || 1;
       if (todayDateDisplay) {
         const now = new Date();
-        todayDateDisplay.textContent = `（${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}）`;
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const dateString = `${year}-${month}-${day}`;
+        const dayOfWeek = ["日", "月", "火", "水", "木", "金", "土"][now.getDay()];
+        
+        const isSunday = now.getDay() === 0;
+        const isSaturday = now.getDay() === 6;
+        const holidayName = holidaysCache[dateString];
+
+        let color = "var(--sub)";
+        let text = `（${year}/${month}/${day} ${dayOfWeek}）`;
+
+        if (holidayName) {
+          color = "#ff6b6b";
+          text = `（${year}/${month}/${day} ${dayOfWeek} ${holidayName}）`;
+        } else if (isSunday) {
+          color = "#ff6b6b";
+        } else if (isSaturday) {
+          color = "#71c8ff";
+        }
+        
+        todayDateDisplay.style.color = color;
+        todayDateDisplay.textContent = text;
       }
 
       if (proteinImage) {
