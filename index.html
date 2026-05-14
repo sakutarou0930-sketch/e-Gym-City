@@ -959,9 +959,36 @@
       return `${year}-${month}-${day}`;
     }
 
+    let audioUnlocked = false;
+    const audioCache = {};
+    const SOUND_FILES = ["キラッ1.mp3", "キラッ2.mp3", "決定ボタンを押す21.mp3", "ヒヨコの鳴き声.mp3"];
+
+    function unlockAudio() {
+      if (audioUnlocked) return;
+      SOUND_FILES.forEach(file => {
+        const audio = new Audio(`assets/${file}`);
+        audio.volume = 0;
+        audio.play().then(() => {
+          audio.pause();
+          audio.currentTime = 0;
+        }).catch(() => {});
+        audioCache[file] = audio;
+      });
+      audioUnlocked = true;
+      document.removeEventListener('touchstart', unlockAudio);
+      document.removeEventListener('click', unlockAudio);
+    }
+    document.addEventListener('touchstart', unlockAudio, { once: true });
+    document.addEventListener('click', unlockAudio, { once: true });
+
     function playSound(filename) {
       if (!state.soundEnabled) return;
-      const audio = new Audio(`assets/${filename}`);
+      let audio = audioCache[filename];
+      if (audio) {
+        audio = audio.cloneNode();
+      } else {
+        audio = new Audio(`assets/${filename}`);
+      }
       audio.volume = 0.5;
       audio.play().catch(e => console.log("音声再生がブラウザにブロックされました:", e));
     }
