@@ -446,7 +446,7 @@
       .header { position: relative; flex-direction: column; text-align: center; gap: 8px; padding: 14px 10px; }
       .title { font-size: 24px; margin-top: 5px; }
       .mute-btn { position: absolute; top: 15px; right: 15px; padding: 4px 8px; font-size: 14px; }
-      .score-board { justify-content: center; gap: 4px; flex-wrap: nowrap; }
+      .score-board { justify-content: center; gap: 4px; flex-wrap: wrap; }
       .score-chip:not(.mute-btn) { font-size: 11px; padding: 5px 6px; letter-spacing: -0.5px; }
       
       /* 街の景色の調整 */
@@ -478,6 +478,7 @@
         <div class="score-chip">🏅 合計 <span id="totalPoints">0</span> pt</div>
         <div class="score-chip">🏢 Gym Lv.<span id="gymLevel">1</span></div>
         <div class="score-chip">🐤 今日 <span id="todayPoints">0</span> pt</div>
+        <div class="score-chip">📅 ログイン <span id="loginDaysDisplay">1</span> 日目</div>
       </div>
     </header>
 
@@ -499,7 +500,7 @@
     </section>
 
     <section class="task-panel">
-      <h2 class="panel-title">タスク一覧</h2>
+      <h2 class="panel-title">タスク一覧<span id="todayDateDisplay" style="font-size: 16px; color: var(--sub); margin-left: 12px; font-weight: normal;"></span></h2>
 
       <form id="taskForm" class="form">
         <input id="taskInput" class="task-input" type="text" placeholder="タスクを入力" autocomplete="off" />
@@ -588,6 +589,8 @@
     const cancelDayCheckBtn = document.getElementById("cancelDayCheckBtn");
     const confirmDayResetBtn = document.getElementById("confirmDayResetBtn");
     const muteBtn = document.getElementById("muteBtn");
+    const loginDaysDisplay = document.getElementById("loginDaysDisplay");
+    const todayDateDisplay = document.getElementById("todayDateDisplay");
 
     init();
 
@@ -777,6 +780,11 @@
     function render(animateGym = false) {
       totalPoints.textContent = state.totalPoints;
       todayPoints.textContent = state.todayPoints;
+      if (loginDaysDisplay) loginDaysDisplay.textContent = state.loginDays || 1;
+      if (todayDateDisplay) {
+        const now = new Date();
+        todayDateDisplay.textContent = `（${now.getFullYear()}/${String(now.getMonth() + 1).padStart(2, '0')}/${String(now.getDate()).padStart(2, '0')}）`;
+      }
 
       if (proteinImage) {
         proteinImage.style.display = state.loginDays >= 10 ? "block" : "none";
