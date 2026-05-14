@@ -201,9 +201,13 @@
 
     .form {
       display: grid;
-      grid-template-columns: 1fr 140px 120px;
+      grid-template-columns: 1fr 1fr;
       gap: 10px;
       margin-bottom: 14px;
+    }
+
+    #taskInput {
+      grid-column: 1 / -1;
     }
 
     input, select, button {
@@ -441,10 +445,6 @@
     @media (max-width: 850px) {
       body { padding: 10px; }
       .game { grid-template-columns: 1fr; gap: 16px; }
-      
-      .form { grid-template-columns: 1fr 1fr; }
-      #taskInput { grid-column: 1 / -1; }
-      .add-btn { grid-column: 1 / -1; }
       
       /* ヘッダーの調整 */
       .header { position: relative; flex-direction: column; text-align: center; gap: 8px; padding: 14px 10px; }
