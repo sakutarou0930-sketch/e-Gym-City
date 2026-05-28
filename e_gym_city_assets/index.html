@@ -1,0 +1,729 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>e-Gym City</title>
+  <style>
+    :root {
+      --bg: #10223f;
+      --panel: #18365f;
+      --panel-light: #245184;
+      --text: #fff7d6;
+      --sub: #b9d7ff;
+      --accent: #2dd4ff;
+      --accent2: #ffd84d;
+      --danger: #ff6b6b;
+      --ok: #70e27b;
+      --shadow: rgba(0, 0, 0, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Trebuchet MS", "Hiragino Kaku Gothic ProN", "Yu Gothic", sans-serif;
+      background: radial-gradient(circle at top, #244d82 0%, var(--bg) 55%, #071426 100%);
+      color: var(--text);
+      min-height: 100vh;
+      padding: 24px;
+    }
+
+    .game {
+      max-width: 1100px;
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 20px;
+    }
+
+    .header {
+      grid-column: 1 / -1;
+      background: linear-gradient(180deg, #1f5fa3, #123864);
+      border: 4px solid #071426;
+      box-shadow: 0 8px 0 #06101f, 0 14px 24px var(--shadow);
+      border-radius: 18px;
+      padding: 18px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+    }
+
+    .title {
+      margin: 0;
+      font-size: 34px;
+      letter-spacing: 1px;
+      text-shadow: 3px 3px 0 #06101f;
+    }
+
+    .score-board {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .score-chip {
+      background: #09213e;
+      border: 3px solid #3a82ca;
+      border-radius: 14px;
+      padding: 8px 12px;
+      font-weight: 800;
+      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.25);
+      white-space: nowrap;
+    }
+
+    .city-panel, .task-panel {
+      background: rgba(10, 29, 54, 0.92);
+      border: 4px solid #071426;
+      border-radius: 18px;
+      box-shadow: 0 8px 0 #06101f, 0 14px 24px var(--shadow);
+      overflow: hidden;
+    }
+
+    .city-scene {
+      position: relative;
+      min-height: 560px;
+      padding: 18px;
+      background: linear-gradient(180deg, #71c8ff 0%, #b8f0ff 42%, #8bd66d 43%, #4caf50 100%);
+    }
+
+    .sky-title {
+      position: absolute;
+      left: 18px;
+      top: 14px;
+      background: rgba(8, 24, 45, 0.78);
+      border: 3px solid rgba(255,255,255,0.45);
+      border-radius: 14px;
+      padding: 8px 12px;
+      font-weight: 900;
+      color: white;
+      text-shadow: 2px 2px 0 #06101f;
+    }
+
+    .background-img {
+      position: absolute;
+      left: 50%;
+      top: 74px;
+      transform: translateX(-50%);
+      width: min(92%, 512px);
+      image-rendering: pixelated;
+      opacity: 0.95;
+      border: 4px solid rgba(255,255,255,0.5);
+      border-radius: 12px;
+      background: rgba(255,255,255,0.2);
+    }
+
+    .gym-img {
+      position: absolute;
+      left: 50%;
+      top: 190px;
+      transform: translateX(-50%);
+      width: 256px;
+      height: 256px;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 10px 0 rgba(0,0,0,0.25));
+      transition: transform 0.25s ease;
+    }
+
+    .gym-img.level-up {
+      animation: pop 0.55s ease;
+    }
+
+    .mascot-img {
+      position: absolute;
+      left: calc(50% + 155px);
+      top: 355px;
+      width: 96px;
+      height: 96px;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 8px 0 rgba(0,0,0,0.2));
+      animation: idle 1.6s infinite ease-in-out;
+    }
+
+    .object {
+      position: absolute;
+      image-rendering: pixelated;
+      filter: drop-shadow(0 7px 0 rgba(0,0,0,0.18));
+    }
+
+    .tree { width: 120px; left: 48px; bottom: 70px; }
+    .bench { width: 100px; right: 70px; bottom: 82px; }
+    .dumbbell { width: 90px; left: 250px; bottom: 68px; }
+    .streetlamp { width: 110px; right: 28px; bottom: 150px; }
+
+    .message-box {
+      position: absolute;
+      left: 18px;
+      right: 18px;
+      bottom: 16px;
+      background: rgba(8, 24, 45, 0.9);
+      border: 4px solid rgba(255,255,255,0.7);
+      border-radius: 14px;
+      padding: 12px 14px;
+      font-weight: 800;
+      line-height: 1.5;
+    }
+
+    .task-panel {
+      padding: 18px;
+    }
+
+    .panel-title {
+      margin: 0 0 14px;
+      font-size: 24px;
+      text-shadow: 2px 2px 0 #06101f;
+    }
+
+    .form {
+      display: grid;
+      grid-template-columns: 1fr 130px;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    input, select, button {
+      font: inherit;
+    }
+
+    .task-input, .task-type {
+      border: 3px solid #071426;
+      background: #fff7d6;
+      color: #10223f;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 800;
+      outline: none;
+    }
+
+    .add-btn, .reset-btn, .confirm-btn, .cancel-btn {
+      border: 3px solid #071426;
+      border-radius: 12px;
+      padding: 10px 12px;
+      font-weight: 900;
+      cursor: pointer;
+      box-shadow: 0 5px 0 #06101f;
+      transition: transform 0.08s ease, box-shadow 0.08s ease;
+    }
+
+    .add-btn:active, .reset-btn:active, .confirm-btn:active, .cancel-btn:active {
+      transform: translateY(4px);
+      box-shadow: 0 1px 0 #06101f;
+    }
+
+    .add-btn {
+      grid-column: 1 / -1;
+      background: var(--accent2);
+      color: #10223f;
+    }
+
+    .task-list {
+      display: grid;
+      gap: 10px;
+      max-height: 430px;
+      overflow: auto;
+      padding-right: 4px;
+    }
+
+    .task-item {
+      display: grid;
+      grid-template-columns: auto 1fr auto auto;
+      align-items: center;
+      gap: 10px;
+      background: linear-gradient(180deg, var(--panel-light), var(--panel));
+      border: 3px solid #071426;
+      border-radius: 14px;
+      padding: 10px;
+      box-shadow: inset 0 -4px 0 rgba(0,0,0,0.22);
+    }
+
+    .task-item.done {
+      opacity: 0.74;
+      background: linear-gradient(180deg, #24415f, #152a43);
+    }
+
+    .task-checkbox {
+      width: 24px;
+      height: 24px;
+      accent-color: #70e27b;
+      cursor: pointer;
+    }
+
+    .task-name {
+      font-weight: 900;
+      word-break: break-word;
+    }
+
+    .task-item.done .task-name {
+      text-decoration: line-through;
+      color: var(--sub);
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 5px 8px;
+      font-size: 12px;
+      font-weight: 900;
+      color: #06101f;
+      background: #fff7d6;
+      white-space: nowrap;
+    }
+
+    .badge.daily { background: #9be7ff; }
+    .badge.extra { background: #ffd84d; }
+    .badge.emergency { background: #ff9b6b; }
+
+    .delete-btn {
+      background: #ff6b6b;
+      color: white;
+      border: 2px solid #071426;
+      border-radius: 10px;
+      font-weight: 900;
+      cursor: pointer;
+      padding: 5px 8px;
+    }
+
+    .empty {
+      color: var(--sub);
+      padding: 18px;
+      border: 3px dashed #3a82ca;
+      border-radius: 14px;
+      text-align: center;
+      font-weight: 800;
+    }
+
+    .footer-actions {
+      margin-top: 14px;
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .reset-btn {
+      background: #24415f;
+      color: var(--text);
+    }
+
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.65);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 10;
+    }
+
+    .modal-backdrop.show { display: flex; }
+
+    .modal {
+      width: min(620px, 100%);
+      background: #112d52;
+      border: 4px solid #071426;
+      border-radius: 18px;
+      box-shadow: 0 8px 0 #06101f, 0 14px 24px var(--shadow);
+      padding: 20px;
+    }
+
+    .modal h2 {
+      margin: 0 0 10px;
+      font-size: 26px;
+    }
+
+    .modal p {
+      line-height: 1.6;
+      color: var(--sub);
+      font-weight: 800;
+    }
+
+    .undone-list {
+      background: rgba(0,0,0,0.22);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin: 12px 0;
+      max-height: 220px;
+      overflow: auto;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      flex-wrap: wrap;
+    }
+
+    .confirm-btn {
+      background: var(--ok);
+      color: #06101f;
+    }
+
+    .cancel-btn {
+      background: #ffcf66;
+      color: #06101f;
+    }
+
+    @keyframes idle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    @keyframes pop {
+      0% { transform: translateX(-50%) scale(1); }
+      40% { transform: translateX(-50%) scale(1.12); }
+      100% { transform: translateX(-50%) scale(1); }
+    }
+
+    @media (max-width: 880px) {
+      body { padding: 14px; }
+      .game { grid-template-columns: 1fr; }
+      .header { align-items: flex-start; flex-direction: column; }
+      .score-board { justify-content: flex-start; }
+      .city-scene { min-height: 520px; }
+      .mascot-img { left: calc(50% + 100px); }
+    }
+  </style>
+</head>
+<body>
+  <main class="game">
+    <header class="header">
+      <h1 class="title">e-Gym City</h1>
+      <div class="score-board">
+        <div class="score-chip">🏅 合計 <span id="totalPoints">0</span> pt</div>
+        <div class="score-chip">🏢 Gym Lv.<span id="gymLevel">1</span></div>
+        <div class="score-chip">🐤 今日 <span id="todayPoints">0</span> pt</div>
+      </div>
+    </header>
+
+    <section class="city-panel">
+      <div class="city-scene">
+        <div class="sky-title">タスクで街を育てよう！</div>
+        <img class="background-img" src="assets/town_background.png" alt="街の背景" onerror="this.style.display='none'" />
+        <img id="gymImage" class="gym-img" src="assets/gym_lv1.png" alt="ジム" />
+        <img id="mascotImage" class="mascot-img" src="assets/chick_normal.png" alt="筋肉ヒヨコ" />
+
+        <img class="object tree" src="assets/tree.png" alt="木" onerror="this.style.display='none'" />
+        <img class="object bench" src="assets/bench.png" alt="ベンチ" onerror="this.style.display='none'" />
+        <img class="object dumbbell" src="assets/dumbbell.png" alt="ダンベル" onerror="this.style.display='none'" />
+        <img class="object streetlamp" src="assets/streetlamp.png" alt="街灯" onerror="this.style.display='none'" />
+
+        <div id="messageBox" class="message-box">今日もピヨっと1タスクから始めよう！</div>
+      </div>
+    </section>
+
+    <section class="task-panel">
+      <h2 class="panel-title">タスク一覧</h2>
+
+      <form id="taskForm" class="form">
+        <input id="taskInput" class="task-input" type="text" placeholder="タスクを入力" autocomplete="off" />
+        <select id="taskType" class="task-type">
+          <option value="daily">毎日 1pt</option>
+          <option value="extra">追加 2pt</option>
+          <option value="emergency">臨時 3pt</option>
+        </select>
+        <button class="add-btn" type="submit">＋ タスク追加</button>
+      </form>
+
+      <div id="taskList" class="task-list"></div>
+
+      <div class="footer-actions">
+        <button id="manualDayCheckBtn" class="reset-btn" type="button">翌日チェック画面を表示</button>
+        <button id="hardResetBtn" class="reset-btn" type="button">全データ初期化</button>
+      </div>
+    </section>
+  </main>
+
+  <div id="dayCheckModal" class="modal-backdrop">
+    <div class="modal">
+      <h2>昨日のタスク確認</h2>
+      <p>やり残しがないか確認してください。確認OKを押すと、完了チェックだけリセットされます。タスク内容と合計ポイントは残ります。</p>
+      <div id="undoneList" class="undone-list"></div>
+      <div class="modal-actions">
+        <button id="cancelDayCheckBtn" class="cancel-btn" type="button">まだ確認する</button>
+        <button id="confirmDayResetBtn" class="confirm-btn" type="button">確認OK・チェックリセット</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = "eGymCitySaveData_v1";
+
+    const POINTS = {
+      daily: 1,
+      extra: 2,
+      emergency: 3
+    };
+
+    const TYPE_LABELS = {
+      daily: "毎日",
+      extra: "追加",
+      emergency: "臨時"
+    };
+
+    const MASCOTS = {
+      normal: "assets/chick_normal.png",
+      happy: "assets/chick_happy.png",
+      tired: "assets/chick_tired.png",
+      surprised: "assets/chick_surprised.png",
+      sleep: "assets/chick_sleep.png"
+    };
+
+    const initialState = {
+      tasks: [],
+      totalPoints: 0,
+      todayPoints: 0,
+      lastOpenedDate: getTodayString(),
+      mascotState: "normal"
+    };
+
+    let state = loadState();
+
+    const taskForm = document.getElementById("taskForm");
+    const taskInput = document.getElementById("taskInput");
+    const taskType = document.getElementById("taskType");
+    const taskList = document.getElementById("taskList");
+    const totalPoints = document.getElementById("totalPoints");
+    const todayPoints = document.getElementById("todayPoints");
+    const gymLevel = document.getElementById("gymLevel");
+    const gymImage = document.getElementById("gymImage");
+    const mascotImage = document.getElementById("mascotImage");
+    const messageBox = document.getElementById("messageBox");
+    const dayCheckModal = document.getElementById("dayCheckModal");
+    const undoneList = document.getElementById("undoneList");
+    const manualDayCheckBtn = document.getElementById("manualDayCheckBtn");
+    const hardResetBtn = document.getElementById("hardResetBtn");
+    const cancelDayCheckBtn = document.getElementById("cancelDayCheckBtn");
+    const confirmDayResetBtn = document.getElementById("confirmDayResetBtn");
+
+    init();
+
+    function init() {
+      const today = getTodayString();
+      if (state.lastOpenedDate !== today) {
+        openDayCheckModal();
+      }
+      render();
+    }
+
+    taskForm.addEventListener("submit", (event) => {
+      event.preventDefault();
+      const name = taskInput.value.trim();
+      const type = taskType.value;
+      if (!name) return;
+
+      state.tasks.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now()),
+        name,
+        type,
+        done: false,
+        createdAt: new Date().toISOString()
+      });
+
+      taskInput.value = "";
+      setMascot("normal", "新しいタスクを登録したピヨ！");
+      saveState();
+      render();
+    });
+
+    manualDayCheckBtn.addEventListener("click", openDayCheckModal);
+
+    hardResetBtn.addEventListener("click", () => {
+      const ok = confirm("本当に全データを初期化しますか？ タスク・ポイントがすべて消えます。");
+      if (!ok) return;
+      state = { ...initialState, tasks: [], lastOpenedDate: getTodayString() };
+      saveState();
+      render();
+    });
+
+    cancelDayCheckBtn.addEventListener("click", () => {
+      dayCheckModal.classList.remove("show");
+    });
+
+    confirmDayResetBtn.addEventListener("click", () => {
+      state.tasks = state.tasks.filter(task => !task.done);
+      state.todayPoints = 0;
+      state.lastOpenedDate = getTodayString();
+      setMascot("normal", "新しい1日が始まったピヨ！今日も街を育てよう！");
+      saveState();
+      dayCheckModal.classList.remove("show");
+      render();
+    });
+
+    function toggleTask(taskId, checked) {
+      const task = state.tasks.find(item => item.id === taskId);
+      if (!task) return;
+
+      const point = POINTS[task.type];
+
+      if (checked && !task.done) {
+        task.done = true;
+        state.totalPoints += point;
+        state.todayPoints += point;
+
+        if (task.type === "emergency") {
+          setMascot("surprised", `臨時対応クリア！ +${point}pt ピヨッ！！`);
+        } else if (task.type === "extra") {
+          setMascot("happy", `追加タスク達成！ +${point}pt すごいピヨ！`);
+        } else {
+          setMascot("happy", `毎日タスク達成！ +${point}pt ピヨ！`);
+        }
+      } else if (!checked && task.done) {
+        task.done = false;
+        state.totalPoints = Math.max(0, state.totalPoints - point);
+        state.todayPoints = Math.max(0, state.todayPoints - point);
+        setMascot("tired", `チェックを戻したピヨ。 -${point}pt`);
+      }
+
+      saveState();
+      render(true);
+    }
+
+    function deleteTask(taskId) {
+      const task = state.tasks.find(item => item.id === taskId);
+      if (!task) return;
+
+      const ok = confirm(`「${task.name}」を削除しますか？`);
+      if (!ok) return;
+
+      if (task.done) {
+        const point = POINTS[task.type];
+        state.totalPoints = Math.max(0, state.totalPoints - point);
+        state.todayPoints = Math.max(0, state.todayPoints - point);
+      }
+
+      state.tasks = state.tasks.filter(item => item.id !== taskId);
+      setMascot("normal", "タスクを整理したピヨ！");
+      saveState();
+      render();
+    }
+
+    function render(animateGym = false) {
+      totalPoints.textContent = state.totalPoints;
+      todayPoints.textContent = state.todayPoints;
+
+      const level = getGymLevel(state.totalPoints);
+      gymLevel.textContent = level;
+      gymImage.src = `assets/gym_lv${level}.png`;
+
+      if (animateGym) {
+        gymImage.classList.remove("level-up");
+        void gymImage.offsetWidth;
+        gymImage.classList.add("level-up");
+      }
+
+      mascotImage.src = MASCOTS[state.mascotState] || MASCOTS.normal;
+
+      taskList.innerHTML = "";
+      if (state.tasks.length === 0) {
+        taskList.innerHTML = `<div class="empty">まだタスクがありません。まずは1つ登録してみよう！</div>`;
+        return;
+      }
+
+      state.tasks.forEach(task => {
+        const item = document.createElement("div");
+        item.className = `task-item ${task.done ? "done" : ""}`;
+
+        const checkbox = document.createElement("input");
+        checkbox.type = "checkbox";
+        checkbox.className = "task-checkbox";
+        checkbox.checked = task.done;
+        checkbox.addEventListener("change", () => toggleTask(task.id, checkbox.checked));
+
+        const name = document.createElement("div");
+        name.className = "task-name";
+        name.textContent = task.name;
+
+        const badge = document.createElement("div");
+        badge.className = `badge ${task.type}`;
+        badge.textContent = `${TYPE_LABELS[task.type]} +${POINTS[task.type]}pt`;
+
+        const del = document.createElement("button");
+        del.className = "delete-btn";
+        del.type = "button";
+        del.textContent = "削除";
+        del.addEventListener("click", () => deleteTask(task.id));
+
+        item.appendChild(checkbox);
+        item.appendChild(name);
+        item.appendChild(badge);
+        item.appendChild(del);
+        taskList.appendChild(item);
+      });
+    }
+
+    function openDayCheckModal() {
+      if (state.tasks.length === 0) {
+        undoneList.innerHTML = `<p>昨日のタスクはありませんでした。確認OKで今日のタスクを開始します。</p>`;
+      } else {
+        undoneList.innerHTML = `
+          <strong>昨日のタスク一覧</strong>
+          <ul style="list-style: none; padding-left: 0;">
+            ${state.tasks.map(task => `
+              <li style="margin-bottom: 6px;">
+                ${task.done ? '✅' : '⬜'} <span style="${task.done ? 'text-decoration: line-through; color: var(--sub);' : ''}">${escapeHtml(task.name)}（${TYPE_LABELS[task.type]}）</span>
+              </li>
+            `).join("")}
+          </ul>
+        `;
+      }
+
+      dayCheckModal.classList.add("show");
+      setMascot("sleep", "昨日のタスク確認をするピヨ…");
+      saveState();
+      render();
+    }
+
+    function getGymLevel(points) {
+      if (points >= 50) return 3;
+      if (points >= 20) return 2;
+      return 1;
+    }
+
+    function setMascot(status, message) {
+      state.mascotState = status;
+      if (message) messageBox.textContent = message;
+
+      if (["happy", "surprised", "tired"].includes(status)) {
+        setTimeout(() => {
+          state.mascotState = "normal";
+          saveState();
+          render();
+        }, 1800);
+      }
+    }
+
+    function getTodayString() {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, "0");
+      const day = String(now.getDate()).padStart(2, "0");
+      return `${year}-${month}-${day}`;
+    }
+
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return { ...initialState };
+        return { ...initialState, ...JSON.parse(raw) };
+      } catch (error) {
+        console.error(error);
+        return { ...initialState };
+      }
+    }
+
+    function escapeHtml(text) {
+      return text
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+  </script>
+</body>
+</html>

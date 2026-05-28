@@ -390,6 +390,29 @@
       overflow: auto;
     }
 
+    .recurring-item {
+      background: #123864;
+      border: 2px solid #071426;
+      border-radius: 8px;
+      padding: 10px;
+      margin-bottom: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .recurring-info {
+      font-weight: bold;
+      color: #fff;
+    }
+    .freq-badge {
+      background: #4caf50;
+      color: #fff;
+      padding: 3px 6px;
+      border-radius: 4px;
+      font-size: 11px;
+      margin-right: 6px;
+    }
+
     .modal-actions {
       display: flex;
       gap: 10px;
@@ -520,6 +543,7 @@
       <div id="taskList" class="task-list"></div>
 
       <div class="footer-actions">
+        <button id="openRecurringModalBtn" class="reset-btn" type="button">🔄 定期タスク設定</button>
         <button id="manualDayCheckBtn" class="reset-btn" type="button">翌日チェック画面を表示</button>
         <button id="hardResetBtn" class="reset-btn" type="button">全データ初期化</button>
       </div>
@@ -534,6 +558,37 @@
       <div class="modal-actions">
         <button id="cancelDayCheckBtn" class="cancel-btn" type="button">まだ確認する</button>
         <button id="confirmDayResetBtn" class="confirm-btn" type="button">確認OK・チェックリセット</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="recurringModal" class="modal-backdrop">
+    <div class="modal">
+      <h2>🔄 定期タスク設定</h2>
+      <p>毎朝自動で追加される固定タスクを登録できます。</p>
+      
+      <form id="recurringForm" class="form" style="grid-template-columns: 1fr; gap: 8px;">
+        <div style="display: flex; gap: 8px;">
+          <select id="recurringFreq" class="task-type" style="flex: 1;">
+            <option value="daily">毎日</option>
+            <option value="weekly">毎週</option>
+            <option value="monthly">毎月</option>
+          </select>
+          <select id="recurringFreqValue" class="task-type" style="flex: 1; display: none;"></select>
+        </div>
+        <input id="recurringInput" class="task-input" type="text" placeholder="定期タスク名" required />
+        <select id="recurringType" class="task-type">
+          <option value="daily">毎日 1pt</option>
+          <option value="extra">追加 2pt</option>
+          <option value="emergency">臨時 3pt</option>
+        </select>
+        <button class="add-btn" type="submit">＋ 登録する</button>
+      </form>
+      
+      <div id="recurringList" class="undone-list" style="margin-top: 14px; max-height: 220px;"></div>
+
+      <div class="modal-actions" style="margin-top: 14px;">
+        <button id="closeRecurringBtn" class="cancel-btn" type="button">閉じる</button>
       </div>
     </div>
   </div>
@@ -563,6 +618,7 @@
 
     const initialState = {
       tasks: [],
+      recurringTasks: [],
       totalPoints: 0,
       todayPoints: 0,
       lastOpenedDate: getTodayString(),
@@ -597,6 +653,18 @@
     const muteBtn = document.getElementById("muteBtn");
     const loginDaysDisplay = document.getElementById("loginDaysDisplay");
     const todayDateDisplay = document.getElementById("todayDateDisplay");
+
+    const openRecurringModalBtn = document.getElementById("openRecurringModalBtn");
+    const recurringModal = document.getElementById("recurringModal");
+    const closeRecurringBtn = document.getElementById("closeRecurringBtn");
+    const recurringForm = document.getElementById("recurringForm");
+    const recurringFreq = document.getElementById("recurringFreq");
+    const recurringFreqValue = document.getElementById("recurringFreqValue");
+    const recurringInput = document.getElementById("recurringInput");
+    const recurringType = document.getElementById("recurringType");
+    const recurringList = document.getElementById("recurringList");
+
+    const WEEK_DAYS = ["日", "月", "火", "水", "木", "金", "土"];
     let holidaysCache = {};
 
     async function fetchHolidays() {
@@ -691,6 +759,35 @@
 
     confirmDayResetBtn.addEventListener("click", () => {
       state.tasks = state.tasks.filter(task => !task.done);
+
+      if (state.recurringTasks && state.recurringTasks.length > 0) {
+        const todayDate = new Date();
+        const dayOfWeek = todayDate.getDay();
+        const dateOfMonth = todayDate.getDate();
+
+        state.recurringTasks.forEach(rt => {
+          let shouldSpawn = false;
+          if (rt.frequency === "daily") {
+             shouldSpawn = true;
+          } else if (rt.frequency === "weekly" && parseInt(rt.freqValue) === dayOfWeek) {
+             shouldSpawn = true;
+          } else if (rt.frequency === "monthly" && parseInt(rt.freqValue) === dateOfMonth) {
+             shouldSpawn = true;
+          }
+
+          if (shouldSpawn) {
+             state.tasks.unshift({
+               id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+               name: rt.name,
+               type: rt.type,
+               deadline: null,
+               done: false,
+               createdAt: new Date().toISOString()
+             });
+          }
+        });
+      }
+
       state.todayPoints = 0;
       state.loginDays = (state.loginDays || 1) + 1;
       state.lastOpenedDate = getTodayString();
@@ -1021,6 +1118,85 @@
       const month = String(now.getMonth() + 1).padStart(2, "0");
       const day = String(now.getDate()).padStart(2, "0");
       return `${year}-${month}-${day}`;
+    }
+
+    function updateRecurringFreqValue() {
+      const freq = recurringFreq.value;
+      recurringFreqValue.innerHTML = "";
+      if (freq === "daily") {
+        recurringFreqValue.style.display = "none";
+      } else if (freq === "weekly") {
+        recurringFreqValue.style.display = "block";
+        WEEK_DAYS.forEach((day, index) => {
+          recurringFreqValue.innerHTML += `<option value="${index}">${day}曜日</option>`;
+        });
+      } else if (freq === "monthly") {
+        recurringFreqValue.style.display = "block";
+        for (let i = 1; i <= 31; i++) {
+          recurringFreqValue.innerHTML += `<option value="${i}">${i}日</option>`;
+        }
+      }
+    }
+
+    recurringFreq.addEventListener("change", updateRecurringFreqValue);
+
+    openRecurringModalBtn.addEventListener("click", () => {
+      updateRecurringFreqValue();
+      renderRecurringList();
+      recurringModal.classList.add("show");
+    });
+
+    closeRecurringBtn.addEventListener("click", () => {
+      recurringModal.classList.remove("show");
+    });
+
+    recurringForm.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = recurringInput.value.trim();
+      if (!name) return;
+      if (!state.recurringTasks) state.recurringTasks = [];
+      
+      state.recurringTasks.push({
+        id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+        name,
+        type: recurringType.value,
+        frequency: recurringFreq.value,
+        freqValue: recurringFreqValue.value
+      });
+      
+      recurringInput.value = "";
+      saveState();
+      renderRecurringList();
+    });
+
+    window.deleteRecurringTask = function(id) {
+      if (!confirm("この定期タスクを削除しますか？")) return;
+      state.recurringTasks = state.recurringTasks.filter(t => t.id !== id);
+      saveState();
+      renderRecurringList();
+    };
+
+    function renderRecurringList() {
+      if (!state.recurringTasks || state.recurringTasks.length === 0) {
+        recurringList.innerHTML = `<p style="text-align: center; color: var(--sub);">登録されている定期タスクはありません。</p>`;
+        return;
+      }
+      
+      recurringList.innerHTML = state.recurringTasks.map(rt => {
+        let freqText = "毎日";
+        if (rt.frequency === "weekly") freqText = `毎週 ${WEEK_DAYS[parseInt(rt.freqValue)]}曜日`;
+        if (rt.frequency === "monthly") freqText = `毎月 ${rt.freqValue}日`;
+        
+        return `
+          <div class="recurring-item">
+            <div class="recurring-info">
+              <span class="freq-badge">${freqText}</span>
+              ${escapeHtml(rt.name)} <span style="font-size: 11px; color: var(--sub);">(${TYPE_LABELS[rt.type]})</span>
+            </div>
+            <button class="delete-btn" type="button" onclick="deleteRecurringTask('${rt.id}')">削除</button>
+          </div>
+        `;
+      }).join("");
     }
 
     let audioUnlocked = false;
