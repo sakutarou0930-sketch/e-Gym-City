@@ -503,7 +503,7 @@
       <h1 class="title" style="display: none;">e-Gym City</h1>
       <div class="score-board">
         <button id="muteBtn" class="score-chip mute-btn" type="button" title="サウンドON/OFF">🔊</button>
-        <div class="score-chip">🏅 合計 <span id="totalPoints">0</span> pt</div>
+        <div class="score-chip">🏅 今月 <span id="totalPoints">0</span> pt</div>
         <div class="score-chip">🏢 Gym Lv.<span id="gymLevel">1</span></div>
         <div class="score-chip">🐤 今日 <span id="todayPoints">0</span> pt</div>
         <div class="score-chip">📅 ログイン <span id="loginDaysDisplay">1</span> 日目</div>
@@ -740,6 +740,13 @@
       }
       if (state.todayStore === undefined) state.todayStore = "unregistered";
       if (state.todayStore === "off" && state.stores.length === 0) state.todayStore = "unregistered";
+
+      const now = new Date();
+      const currentMonthStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+      if (state.currentMonth !== currentMonthStr) {
+        state.totalPoints = 0;
+        state.currentMonth = currentMonthStr;
+      }
 
       const today = getTodayString();
       if (state.lastOpenedDate !== today) {
@@ -1231,7 +1238,9 @@
     }
 
     function getGymLevel(points) {
-      if (points >= 50) return 3;
+      if (points >= 90) return 5;
+      if (points >= 65) return 4;
+      if (points >= 40) return 3;
       if (points >= 20) return 2;
       return 1;
     }
