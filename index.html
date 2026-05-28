@@ -1156,13 +1156,39 @@
       if (!name) return;
       if (!state.recurringTasks) state.recurringTasks = [];
       
-      state.recurringTasks.push({
+      const newRt = {
         id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
         name,
         type: recurringType.value,
         frequency: recurringFreq.value,
         freqValue: recurringFreqValue.value
-      });
+      };
+      state.recurringTasks.push(newRt);
+      
+      const todayDate = new Date();
+      const dayOfWeek = todayDate.getDay();
+      const dateOfMonth = todayDate.getDate();
+      
+      let shouldSpawn = false;
+      if (newRt.frequency === "daily") {
+         shouldSpawn = true;
+      } else if (newRt.frequency === "weekly" && parseInt(newRt.freqValue) === dayOfWeek) {
+         shouldSpawn = true;
+      } else if (newRt.frequency === "monthly" && parseInt(newRt.freqValue) === dateOfMonth) {
+         shouldSpawn = true;
+      }
+
+      if (shouldSpawn) {
+         state.tasks.unshift({
+           id: crypto.randomUUID ? crypto.randomUUID() : String(Date.now() + Math.random()),
+           name: newRt.name,
+           type: newRt.type,
+           deadline: null,
+           done: false,
+           createdAt: new Date().toISOString()
+         });
+         render();
+      }
       
       recurringInput.value = "";
       saveState();
