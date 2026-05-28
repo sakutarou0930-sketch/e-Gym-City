@@ -527,7 +527,7 @@
     </section>
 
     <section class="task-panel">
-      <h2 class="panel-title">タスク一覧<span id="todayDateDisplay" style="font-size: 20px; color: var(--sub); margin-left: 12px; font-weight: normal;"></span></h2>
+      <h2 class="panel-title">タスク一覧<span id="todayDateDisplay" style="font-size: 20px; color: var(--sub); margin-left: 12px; font-weight: normal;"></span><span id="todayStoreBadge" class="badge" style="margin-left: 8px; display: none; vertical-align: text-bottom;"></span></h2>
 
       <form id="taskForm" class="form">
         <input id="taskInput" class="task-input" type="text" placeholder="タスクを入力" autocomplete="off" />
@@ -543,6 +543,7 @@
       <div id="taskList" class="task-list"></div>
 
       <div class="footer-actions">
+        <button id="openShiftModalBtn" class="reset-btn" type="button">🏢 シフト・店舗設定</button>
         <button id="openRecurringModalBtn" class="reset-btn" type="button">🔄 定期タスク設定</button>
         <button id="manualDayCheckBtn" class="reset-btn" type="button">翌日チェック画面を表示</button>
         <button id="hardResetBtn" class="reset-btn" type="button">全データ初期化</button>
@@ -555,6 +556,12 @@
       <h2>昨日のタスク確認</h2>
       <p>やり残しがないか確認してください。確認OKを押すと、完了チェックだけリセットされます。タスク内容と合計ポイントは残ります。</p>
       <div id="undoneList" class="undone-list"></div>
+      <div id="todayShiftContainer" style="background: rgba(0,0,0,0.22); border-radius: 12px; padding: 12px 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+        <strong style="color: #fff;">📅 今日の出勤予定</strong>
+        <select id="todayShiftOverride" class="task-type" style="padding: 6px; font-size: 14px; width: auto; min-width: 120px;">
+          <option value="off">休み</option>
+        </select>
+      </div>
       <div class="modal-actions">
         <button id="cancelDayCheckBtn" class="cancel-btn" type="button">まだ確認する</button>
         <button id="confirmDayResetBtn" class="confirm-btn" type="button">確認OK・チェックリセット</button>
@@ -573,6 +580,7 @@
             <option value="daily">毎日</option>
             <option value="weekly">毎週</option>
             <option value="monthly">毎月</option>
+            <option value="store">店舗出勤時</option>
           </select>
           <select id="recurringFreqValue" class="task-type" style="flex: 1; display: none;"></select>
         </div>
@@ -589,6 +597,33 @@
 
       <div class="modal-actions" style="margin-top: 14px;">
         <button id="closeRecurringBtn" class="cancel-btn" type="button">閉じる</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="shiftModal" class="modal-backdrop">
+    <div class="modal">
+      <h2>🏢 シフト・店舗設定</h2>
+      <p>出勤する可能性のある店舗を登録し、基本の「曜日シフト」を設定します。</p>
+      
+      <div style="background: rgba(0,0,0,0.22); border-radius: 12px; padding: 12px; margin-bottom: 14px;">
+        <h3 style="margin: 0 0 8px; font-size: 16px; color: #fff;">1. 店舗の登録</h3>
+        <div style="display: flex; gap: 8px;">
+          <input id="newStoreInput" class="task-input" type="text" placeholder="店舗名を入力" style="flex: 1;" />
+          <button id="addStoreBtn" class="add-btn" style="grid-column: auto; width: auto;">追加</button>
+        </div>
+        <div id="storeList" style="margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px;"></div>
+      </div>
+
+      <div style="background: rgba(0,0,0,0.22); border-radius: 12px; padding: 12px; margin-bottom: 14px;">
+        <h3 style="margin: 0 0 8px; font-size: 16px; color: #fff;">2. 基本の曜日シフト</h3>
+        <div id="weeklyShiftConfig" style="display: grid; gap: 6px;">
+          <!-- JS generates this -->
+        </div>
+      </div>
+
+      <div class="modal-actions">
+        <button id="closeShiftModalBtn" class="cancel-btn" type="button">閉じる</button>
       </div>
     </div>
   </div>
@@ -646,6 +681,7 @@
     const messageBox = document.getElementById("messageBox");
     const dayCheckModal = document.getElementById("dayCheckModal");
     const undoneList = document.getElementById("undoneList");
+    const todayShiftOverride = document.getElementById("todayShiftOverride");
     const manualDayCheckBtn = document.getElementById("manualDayCheckBtn");
     const hardResetBtn = document.getElementById("hardResetBtn");
     const cancelDayCheckBtn = document.getElementById("cancelDayCheckBtn");
@@ -653,6 +689,15 @@
     const muteBtn = document.getElementById("muteBtn");
     const loginDaysDisplay = document.getElementById("loginDaysDisplay");
     const todayDateDisplay = document.getElementById("todayDateDisplay");
+    const todayStoreBadge = document.getElementById("todayStoreBadge");
+
+    const openShiftModalBtn = document.getElementById("openShiftModalBtn");
+    const shiftModal = document.getElementById("shiftModal");
+    const closeShiftModalBtn = document.getElementById("closeShiftModalBtn");
+    const newStoreInput = document.getElementById("newStoreInput");
+    const addStoreBtn = document.getElementById("addStoreBtn");
+    const storeList = document.getElementById("storeList");
+    const weeklyShiftConfig = document.getElementById("weeklyShiftConfig");
 
     const openRecurringModalBtn = document.getElementById("openRecurringModalBtn");
     const recurringModal = document.getElementById("recurringModal");
@@ -684,6 +729,10 @@
     function init() {
       fetchHolidays();
       if (!state.loginDays) state.loginDays = 1;
+      if (!state.stores) state.stores = [];
+      if (!state.shift) state.shift = { 0: "off", 1: "off", 2: "off", 3: "off", 4: "off", 5: "off", 6: "off" };
+      if (state.todayStore === undefined) state.todayStore = "off";
+
       const today = getTodayString();
       if (state.lastOpenedDate !== today) {
         openDayCheckModal();
@@ -707,6 +756,74 @@
       muteBtn.textContent = state.soundEnabled ? "🔊" : "🔇";
       muteBtn.style.opacity = state.soundEnabled ? "1" : "0.6";
     }
+
+    function renderStoreList() {
+      if (state.stores.length === 0) {
+        storeList.innerHTML = `<span style="color: var(--sub); font-size: 13px;">登録された店舗はありません</span>`;
+      } else {
+        storeList.innerHTML = state.stores.map(store => `
+          <span style="background: var(--panel-light); border: 2px solid #071426; border-radius: 6px; padding: 4px 8px; font-size: 13px; display: flex; align-items: center; gap: 6px;">
+            ${escapeHtml(store)}
+            <button onclick="deleteStore('${escapeHtml(store)}')" style="background: none; border: none; color: var(--danger); cursor: pointer; padding: 0; font-size: 14px; line-height: 1;">×</button>
+          </span>
+        `).join("");
+      }
+      renderWeeklyShiftConfig();
+    }
+
+    addStoreBtn.addEventListener("click", () => {
+      const storeName = newStoreInput.value.trim();
+      if (!storeName || state.stores.includes(storeName)) return;
+      state.stores.push(storeName);
+      newStoreInput.value = "";
+      saveState();
+      renderStoreList();
+    });
+
+    window.deleteStore = function(storeName) {
+      if (!confirm(`店舗「${storeName}」を削除しますか？\n※この店舗が設定されている基本シフトは「休み」になります。`)) return;
+      state.stores = state.stores.filter(s => s !== storeName);
+      for (let i = 0; i < 7; i++) {
+        if (state.shift[i] === storeName) state.shift[i] = "off";
+      }
+      saveState();
+      renderStoreList();
+    };
+
+    function renderWeeklyShiftConfig() {
+      const optionsHTML = `<option value="off">休み</option>` + state.stores.map(store => `<option value="${escapeHtml(store)}">${escapeHtml(store)}</option>`).join("");
+      weeklyShiftConfig.innerHTML = "";
+      const displayOrder = [1, 2, 3, 4, 5, 6, 0];
+      displayOrder.forEach(dayIndex => {
+        const row = document.createElement("div");
+        row.style.display = "flex";
+        row.style.justifyContent = "space-between";
+        row.style.alignItems = "center";
+        
+        row.innerHTML = `
+          <span style="width: 50px; font-weight: bold; color: #fff;">${WEEK_DAYS[dayIndex]}曜</span>
+          <select class="task-type" style="flex: 1; padding: 4px; font-size: 14px;" onchange="updateShift(${dayIndex}, this.value)">
+            ${optionsHTML}
+          </select>
+        `;
+        row.querySelector("select").value = state.shift[dayIndex] || "off";
+        weeklyShiftConfig.appendChild(row);
+      });
+    }
+
+    window.updateShift = function(dayIndex, val) {
+      state.shift[dayIndex] = val;
+      saveState();
+    };
+
+    openShiftModalBtn.addEventListener("click", () => {
+      renderStoreList();
+      shiftModal.classList.add("show");
+    });
+    
+    closeShiftModalBtn.addEventListener("click", () => {
+      shiftModal.classList.remove("show");
+    });
 
     function updateBackground() {
       if (!bgImage) return;
@@ -760,6 +877,8 @@
     confirmDayResetBtn.addEventListener("click", () => {
       state.tasks = state.tasks.filter(task => !task.done);
 
+      state.todayStore = todayShiftOverride.value;
+
       if (state.recurringTasks && state.recurringTasks.length > 0) {
         const todayDate = new Date();
         const dayOfWeek = todayDate.getDay();
@@ -772,6 +891,8 @@
           } else if (rt.frequency === "weekly" && parseInt(rt.freqValue) === dayOfWeek) {
              shouldSpawn = true;
           } else if (rt.frequency === "monthly" && parseInt(rt.freqValue) === dateOfMonth) {
+             shouldSpawn = true;
+          } else if (rt.frequency === "store" && rt.freqValue === state.todayStore) {
              shouldSpawn = true;
           }
 
@@ -981,6 +1102,16 @@
       }
       mascotImage.src = mascotSrc;
 
+      if (state.todayStore && state.todayStore !== "off") {
+        todayStoreBadge.style.display = "inline-block";
+        todayStoreBadge.textContent = state.todayStore;
+        todayStoreBadge.className = "badge daily";
+      } else {
+        todayStoreBadge.style.display = "inline-block";
+        todayStoreBadge.textContent = "休み";
+        todayStoreBadge.className = "badge";
+      }
+
       taskList.innerHTML = "";
       if (state.tasks.length === 0) {
         taskList.innerHTML = `<div class="empty">まだタスクがありません。まずは1つ登録してみよう！</div>`;
@@ -1076,6 +1207,11 @@
         `;
       }
 
+      const todayDate = new Date();
+      const defaultStore = state.shift[todayDate.getDay()] || "off";
+      todayShiftOverride.innerHTML = `<option value="off">休み</option>` + state.stores.map(s => `<option value="${escapeHtml(s)}">${escapeHtml(s)}</option>`).join("");
+      todayShiftOverride.value = defaultStore;
+
       dayCheckModal.classList.add("show");
       setMascot("sleep", "昨日のタスク確認をするピヨ…");
       saveState();
@@ -1135,6 +1271,15 @@
         for (let i = 1; i <= 31; i++) {
           recurringFreqValue.innerHTML += `<option value="${i}">${i}日</option>`;
         }
+      } else if (freq === "store") {
+        recurringFreqValue.style.display = "block";
+        if (!state.stores || state.stores.length === 0) {
+          recurringFreqValue.innerHTML = `<option value="">(店舗を登録してください)</option>`;
+        } else {
+          state.stores.forEach(store => {
+            recurringFreqValue.innerHTML += `<option value="${escapeHtml(store)}">${escapeHtml(store)}</option>`;
+          });
+        }
       }
     }
 
@@ -1176,6 +1321,8 @@
          shouldSpawn = true;
       } else if (newRt.frequency === "monthly" && parseInt(newRt.freqValue) === dateOfMonth) {
          shouldSpawn = true;
+      } else if (newRt.frequency === "store" && newRt.freqValue === state.todayStore) {
+         shouldSpawn = true;
       }
 
       if (shouldSpawn) {
@@ -1212,6 +1359,7 @@
         let freqText = "毎日";
         if (rt.frequency === "weekly") freqText = `毎週 ${WEEK_DAYS[parseInt(rt.freqValue)]}曜日`;
         if (rt.frequency === "monthly") freqText = `毎月 ${rt.freqValue}日`;
+        if (rt.frequency === "store") freqText = `店舗: ${escapeHtml(rt.freqValue)}`;
         
         return `
           <div class="recurring-item">
