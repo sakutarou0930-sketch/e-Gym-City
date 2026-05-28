@@ -629,6 +629,13 @@
     </div>
   </div>
 
+  <div id="anniversaryModal" class="modal-backdrop" style="z-index: 10000; align-items: center; justify-content: center; background: rgba(0,0,0,0.8);">
+    <div style="position: relative; max-width: 90%; max-height: 90vh; text-align: center;">
+      <img src="assets/社長リアル.png" alt="Happy Anniversary" style="max-width: 100%; max-height: 80vh; object-fit: contain; border-radius: 12px; box-shadow: 0 0 20px rgba(255,215,0,0.5);">
+      <button id="closeAnniversaryBtn" class="cancel-btn" type="button" style="display: block; margin: 16px auto 0; font-size: 16px; padding: 10px 30px; background: #fff; color: #333;">閉じる</button>
+    </div>
+  </div>
+
   <script>
     const STORAGE_KEY = "eGymCitySaveData_v1";
 
@@ -660,7 +667,8 @@
       lastOpenedDate: getTodayString(),
       loginDays: 1,
       mascotState: "normal",
-      soundEnabled: true
+      soundEnabled: true,
+      lastAnniversaryYear: 0
     };
 
     let state = loadState();
@@ -699,6 +707,9 @@
     const addStoreBtn = document.getElementById("addStoreBtn");
     const storeList = document.getElementById("storeList");
     const weeklyShiftConfig = document.getElementById("weeklyShiftConfig");
+
+    const anniversaryModal = document.getElementById("anniversaryModal");
+    const closeAnniversaryBtn = document.getElementById("closeAnniversaryBtn");
 
     const openRecurringModalBtn = document.getElementById("openRecurringModalBtn");
     const recurringModal = document.getElementById("recurringModal");
@@ -754,6 +765,18 @@
       } else {
         setMascot("normal", messageBox ? messageBox.textContent : "");
       }
+
+      if (now.getMonth() === 5 && now.getDate() === 5) {
+        if (state.lastAnniversaryYear !== now.getFullYear()) {
+          state.lastAnniversaryYear = now.getFullYear();
+          saveState();
+          anniversaryModal.classList.add("show");
+          if (state.soundEnabled === undefined || state.soundEnabled) {
+            playSound("キラッ2.mp3");
+          }
+        }
+      }
+
       if (state.soundEnabled === undefined) state.soundEnabled = true;
       updateMuteBtn();
       updateBackground();
@@ -766,6 +789,12 @@
       updateMuteBtn();
       saveState();
     });
+
+    if (closeAnniversaryBtn) {
+      closeAnniversaryBtn.addEventListener("click", () => {
+        anniversaryModal.classList.remove("show");
+      });
+    }
 
     function updateMuteBtn() {
       muteBtn.textContent = state.soundEnabled ? "🔊" : "🔇";
